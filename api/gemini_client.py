@@ -5,11 +5,10 @@ from dataclasses import dataclass
 from typing import Any, Dict
 
 from google import generativeai as genai
-from google.api_core import exceptions as google_exceptions
 
 DEFAULT_MODEL = os.getenv("GEMINI_MODEL", "gemini-pro")
 
-api_key = os.getenv("GEMINI_API_KEY")
+api_key = os.getenv("AIzaSyAZuEShA5Go2EIAQN2_4V8lf8t6waJPEKs")
 
 if not api_key:
     raise RuntimeError(
@@ -29,20 +28,6 @@ class GenerateParams:
 
 def _make_model(model_name: str | None = None):
     return genai.GenerativeModel(model_name or DEFAULT_MODEL)
-
-
-def _run_generation(prompt: str, generation_config: Dict[str, Any]):
-    try:
-        return _make_model().generate_content(
-            prompt,
-            generation_config=generation_config,
-        )
-    except google_exceptions.NotFound as exc:
-        raise ValueError(
-            "Selected Gemini model is unavailable for this API key. "
-            "Set GEMINI_MODEL to a supported name such as 'gemini-pro' or "
-            "upgrade the key to access newer models."
-        ) from exc
 
 
 def generate_completion(params: GenerateParams) -> Dict[str, Any]:
@@ -70,7 +55,7 @@ def generate_completion(params: GenerateParams) -> Dict[str, Any]:
         "max_output_tokens": min(params.max_length * 4, 2048),
     }
 
-    response = _run_generation(
+    response = _make_model().generate_content(
         constrained_prompt,
         generation_config=generation_config,
     )
@@ -111,7 +96,7 @@ def summarize_text(text: str, ratio: float, fmt: str) -> Dict[str, Any]:
         f"{cleaned}"
     )
 
-    response = _run_generation(
+    response = _make_model().generate_content(
         prompt,
         generation_config={
             "temperature": 0.4,
@@ -156,7 +141,7 @@ def detect_ai_text(text: str) -> Dict[str, Any]:
         f"Text:\n{cleaned}"
     )
 
-    response = _run_generation(
+    response = _make_model().generate_content(
         prompt,
         generation_config={
             "temperature": 0.2,
